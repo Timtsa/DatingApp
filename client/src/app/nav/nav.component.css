@@ -1,3 +1,15 @@
-.sb{
+/* .sb{
     justify-content: space-between;
+} */
+
+.dropdown-toggle,
+.dropdown-item {
+    cursor: pointer;
+}
+
+img {
+    max-height: 35px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    display: inline;
 }
