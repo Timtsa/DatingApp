@@ -27,8 +27,11 @@ export class ErrorInterceptor implements HttpInterceptor {
                   if (error.error.errors[key])
                     modalStateErrors.push(error.error.errors[key]);
                 throw modalStateErrors.flat();
-              } else {
+              } else if (typeof (error.error) === 'object') {
                 this.toastr.error(error.status, error.error);
+              }
+              else {
+                  this.toastr.error(error.error, error.status);
               }
               break;
             case 401:
@@ -40,8 +43,8 @@ export class ErrorInterceptor implements HttpInterceptor {
               break
 
             case 500:
-              const navigationExtras : NavigationExtras = {state:{error: error.error}};
-              this.router.navigateByUrl('/server-error',navigationExtras);
+              const navigationExtras: NavigationExtras = { state: { error: error.error } };
+              this.router.navigateByUrl('/server-error', navigationExtras);
               break
 
             default:
