@@ -20,14 +20,13 @@ namespace API.Extansions
             services.AddSingleton<PresenceTracker>();
             services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings"));
             services.AddScoped<IPhotoService, PhotoService>();
-            services.AddScoped<ITokenService,TokenService>();
+            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<LogUserActivity>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<ILikeRepository, LikesRepository>();
-            services.AddScoped<IMessageRepository,MessageRepository>(); 
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
-            services.AddDbContext<DataContext>(options=>{
-               options.UseSqlite(config.GetConnectionString("DefaultConnection"));
+            services.AddDbContext<DataContext>(options =>
+            {
+                options.UseSqlite(config.GetConnectionString("DefaultConnection"));
             });
 
 
