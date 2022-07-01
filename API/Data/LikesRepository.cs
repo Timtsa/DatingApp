@@ -29,6 +29,7 @@ namespace API.Data
         {
            var users =_context.Users.OrderBy(u=>u.UserName).AsQueryable();
            var likes = _context.Likes.AsQueryable();
+           var iLikes = _context.Likes.Select(l=>l.LikedUserId).ToList();
 
            if(likeParams.Predicate == "liked")
            {
@@ -46,7 +47,8 @@ namespace API.Data
                 KnownAs = user.KnownAs,
                 Age = user.DateOfBirth.CalculateAge(),
                 PhotoUrl = user.Photos.FirstOrDefault(p=>p.IsMain).Url,
-                City = user.City                
+                City = user.City,  
+                IsLiked = iLikes.Contains(user.Id) ? true :false              
             });
             return await PagedList<LikeDTO>.CreateAsync(likedUsers,likeParams.PageSize,
             likeParams.PageNumber);
@@ -58,6 +60,11 @@ namespace API.Data
             return await _context.Users
                .Include(x=>x.LikedUsers)
                .FirstOrDefaultAsync(x=>x.Id ==userId);
+        }
+
+        public void UnLike(UserLike userLike)
+        {
+           _context.Likes.Remove(userLike);
         }
     }
 }

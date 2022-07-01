@@ -44,6 +44,10 @@ namespace API.Controllers
             }
             var users = await _unitOfWork.UserRepository.GetMembersAsync(userParams);
             Response.AddPaginationHeader(users.CurrentPage,users.PageSize,users.TotalCount,users.TotalPages);
+          foreach(var user in users){
+            if(_unitOfWork.UserRepository.Likes().Contains(user.Id))
+                user.IsLiked=true;
+          }
             return Ok(users);
         }
         

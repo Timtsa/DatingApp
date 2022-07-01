@@ -9,6 +9,8 @@ using API.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+
 
 namespace API.Data
 {
@@ -25,15 +27,24 @@ namespace API.Data
 
         public async Task<MemberDto> GetMemberDtoAsync(string username)
         {
-           return await _context.Users
+         var user = await _context.Users
                 .Where(x => x.UserName == username)
                 .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
                 .SingleOrDefaultAsync();
+         var likes =_context.Likes.Select(l=>l.LikedUserId).ToList();
+         if(likes.Contains(user.Id))
+             user.IsLiked=true;
+         return user;
+        }
+
+        public List<int> Likes(){
+            return _context.Likes.Select(l=>l.LikedUserId).ToList();
         }
 
         public async Task<PagedList<MemberDto>>GetMembersAsync(UserParams userParams)
         {
-           var query= _context.Users.AsQueryable();
+        var likes = _context.Likes.Select(l=>l.LikedUserId).ToList();
+        var query= _context.Users.AsQueryable();
 
            query = query.Where(u=>u.UserName!=userParams.CurrentUsername);
            query = query.Where(u=>u.Gender ==userParams.Gender);
@@ -48,8 +59,21 @@ namespace API.Data
                 "created"=> query.OrderByDescending(u=>u.Created),
                 _ => query.OrderByDescending(u=>u.LastActive) 
             };
+          var  queryToReturn= query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
+          ;
+        //   var temp =new List<MemberDto>();
+        
+               
+        //    foreach (var member in queryToReturn)
+        //     {
+        //         if(likes.Contains(member.Id))
+        //        member.IsLiked=true;
+        //        temp.Add(member);
+        //     }
 
-            return await PagedList<MemberDto>.CreateAsync(query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider).AsNoTracking()
+           
+           
+            return await PagedList<MemberDto>.CreateAsync(queryToReturn
             ,userParams.PageSize,userParams.PageNumber);
         }
 
