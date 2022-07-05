@@ -17,10 +17,11 @@ export class LoadingInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     this.busyService.busy()
     return next.handle(request).pipe(
-      delay(1000),
+  
       finalize(()=>{
         this.busyService.idle();
       })
     );
   }
 }
+// docker run --name dev -e POSTGRES_USER=appuser  -e POSTGRES_PASSWORD=Pa$$w0rd  -p 5532:5434 -d postgres:latest

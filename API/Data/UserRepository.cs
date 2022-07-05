@@ -25,83 +25,85 @@ namespace API.Data
             _context = context;
         }
 
-        public async Task<MemberDto> GetMemberDtoAsync(string username)
+        public async Task<MemberDto> GetMemberDtoAsync(string name, bool IsCurrentUser)
         {
-         var user = await _context.Users
-                .Where(x => x.UserName == username)
-                .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-                .SingleOrDefaultAsync();
-         var likes =_context.Likes.Select(l=>l.LikedUserId).ToList();
-         if(likes.Contains(user.Id))
-             user.IsLiked=true;
-         return user;
+            var query = _context.Users
+                   .Where(x => x.UserName == name)
+                   .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
+                   .AsQueryable();
+            if (IsCurrentUser) query = query.IgnoreQueryFilters();
+            var user = await query.FirstOrDefaultAsync();
+            var likes = _context.Likes.Select(l => l.LikedUserId).ToList();
+            if (likes.Contains(user.Id))
+                user.IsLiked = true;
+            return user;
         }
 
-        public List<int> Likes(){
-            return _context.Likes.Select(l=>l.LikedUserId).ToList();
+        public List<int> Likes()
+        {
+            return _context.Likes.Select(l => l.LikedUserId).ToList();
         }
 
-        public async Task<PagedList<MemberDto>>GetMembersAsync(UserParams userParams)
+          public async Task<AppUser> GetUserByPhotoId(int photoId)
         {
-        var likes = _context.Likes.Select(l=>l.LikedUserId).ToList();
-        var query= _context.Users.AsQueryable();
+        return await _context.Users
+        .Include(p=>p.Photos)
+        .Where(p=>p.Photos.Any(x=>x.Id==photoId))
+        .FirstOrDefaultAsync();
+        }
 
-           query = query.Where(u=>u.UserName!=userParams.CurrentUsername);
-           query = query.Where(u=>u.Gender ==userParams.Gender);
+        public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
+        {
+            var likes = _context.Likes.Select(l => l.LikedUserId).ToList();
+            var query = _context.Users.AsQueryable();
+
+            query = query.Where(u => u.UserName != userParams.CurrentUsername);
+            query = query.Where(u => u.Gender == userParams.Gender);
 
             var minDob = DateTime.Today.AddYears(-userParams.MaxAge - 1);
             var maxDob = DateTime.Today.AddYears(-userParams.MinAge);
 
             query = query.Where(u => u.DateOfBirth >= minDob && u.DateOfBirth <= maxDob);
 
-            query = userParams.OrderBy switch 
+            query = userParams.OrderBy switch
             {
-                "created"=> query.OrderByDescending(u=>u.Created),
-                _ => query.OrderByDescending(u=>u.LastActive) 
+                "created" => query.OrderByDescending(u => u.Created),
+                _ => query.OrderByDescending(u => u.LastActive)
             };
-          var  queryToReturn= query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-          ;
-        //   var temp =new List<MemberDto>();
-        
-               
-        //    foreach (var member in queryToReturn)
-        //     {
-        //         if(likes.Contains(member.Id))
-        //        member.IsLiked=true;
-        //        temp.Add(member);
-        //     }
+            var queryToReturn = query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
+            ;
 
-           
-           
             return await PagedList<MemberDto>.CreateAsync(queryToReturn
-            ,userParams.PageSize,userParams.PageNumber);
+            , userParams.PageSize, userParams.PageNumber);
         }
 
         public async Task<AppUser> GetUserByIdAsync(int id)
         {
-           return await _context.Users.FindAsync(id);
+            return await _context.Users.FindAsync(id);
         }
 
         public async Task<AppUser> GetUserByUsernameAsync(string name)
         {
-            return await _context.Users.Include(p=>p.Photos)
-            .SingleOrDefaultAsync(x=>x.UserName==name);
+            return await _context.Users.Include(p => p.Photos)
+            .SingleOrDefaultAsync(x => x.UserName == name);
         }
 
         public async Task<string> GetUserGender(string username)
         {
-           return await _context.Users.Where(x=>x.UserName ==username)
-           .Select(x=>x.Gender).FirstAsync();
+            return await _context.Users.Where(x => x.UserName == username)
+            .Select(x => x.Gender).FirstAsync();
         }
 
         public async Task<IEnumerable<AppUser>> GetUsersAsync()
         {
-           return await _context.Users.Include(p=>p.Photos).ToListAsync();
-        }       
+            return await _context.Users.Include(p => p.Photos).ToListAsync();
+        }
 
         public void Update(AppUser user)
         {
-          _context.Entry(user).State=EntityState.Modified;
+            _context.Entry(user).State = EntityState.Modified;
         }
+
+
     }
 }
