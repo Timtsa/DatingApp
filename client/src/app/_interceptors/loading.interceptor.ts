@@ -24,4 +24,3 @@ export class LoadingInterceptor implements HttpInterceptor {
     );
   }
 }
-// docker run --name dev -e POSTGRES_USER=appuser  -e POSTGRES_PASSWORD=Pa$$w0rd  -p 5532:5434 -d postgres:latest
